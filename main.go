@@ -20,9 +20,17 @@ func main() {
 		Handler: serverHandler,
 	}
 	log.Printf("listening on %v:%v...\n", address, port)
-	log.Fatal(server.ListenAndServe())
 
-	fmt.Println(address, port)
+	var err error
+	if useTLS() {
+		err = server.ListenAndServeTLS(
+			"/etc/letsencrypt/live/crockeo.net/fullchain.pem",
+			"/etc/letsencrypt/live/crockeo.net/privkey.pem",
+		)
+	} else {
+		err = server.ListenAndServe()
+	}
+	log.Fatal(err)
 }
 
 func serverAddress() (net.IP, uint16) {
@@ -38,6 +46,10 @@ func serverAddress() (net.IP, uint16) {
 	}
 
 	return address, uint16(port)
+}
+
+func useTLS() bool {
+	return len(os.Getenv("SKIP_TLS")) == 0
 }
 
 type funcHandler struct {
@@ -63,7 +75,7 @@ func makeServerHandler() http.Handler {
 }
 
 func accessMiddleware(next http.Handler) http.Handler {
-	return newFuncHandler(func (res http.ResponseWriter, req *http.Request) {
+	return newFuncHandler(func(res http.ResponseWriter, req *http.Request) {
 		log.Printf("%v %v\n", req.Method, req.URL.Path)
 		next.ServeHTTP(res, req)
 	})
