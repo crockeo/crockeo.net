@@ -14,13 +14,18 @@ use warp::reply::Response;
 
 #[tokio::main]
 async fn main() {
+    let log = warp::log::custom(|info: warp::filters::log::Info| {
+	println!("{} {} {}", info.method(), info.path(), info.status());
+    });
+
     let home = warp::path::end().map(serve_homepage);
     let qr_code_endpoint = warp::path("qrcode").map(serve_qr_image);
     let qr_endpoint = warp::path!("qr").map(redirect_to_rick_astley);
 
     let routes = home
 	.or(qr_code_endpoint)
-	.or(qr_endpoint);
+	.or(qr_endpoint)
+	.with(log);
     warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
 }
 
