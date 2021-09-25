@@ -7,45 +7,59 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strconv"
+	"sync"
 
 	qrcode "github.com/skip2/go-qrcode"
 )
 
 func main() {
-	address, port := serverAddress()
-	serverHandler := makeServerHandler()
+	address := serverAddress()
+	usingTLS := useTLS()
+	var port uint16
+	if usingTLS {
+		port = 443
+	} else {
+		port = 80
+	}
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%v:%v", address, port),
-		Handler: serverHandler,
+		Handler: makeServerHandler(),
 	}
 	log.Printf("listening on %v:%v...\n", address, port)
 
 	var err error
 	if useTLS() {
-		err = server.ListenAndServeTLS(
-			"/etc/letsencrypt/live/crockeo.net/fullchain.pem",
-			"/etc/letsencrypt/live/crockeo.net/privkey.pem",
-		)
+		group := sync.WaitGroup{}
+		group.Add(2)
+		go func() {
+			var handler http.Handler
+			handler = newFuncHandler(serveHTTPSRedirect)
+			handler = accessMiddleware(handler)
+			http.ListenAndServe(fmt.Sprintf("%v:80", address), handler)
+			group.Done()
+		}()
+
+		go func() {
+			err = server.ListenAndServeTLS(
+				"/etc/letsencrypt/live/crockeo.net/fullchain.pem",
+				"/etc/letsencrypt/live/crockeo.net/privkey.pem",
+			)
+			group.Done()
+		}()
+		group.Wait()
 	} else {
 		err = server.ListenAndServe()
 	}
 	log.Fatal(err)
 }
 
-func serverAddress() (net.IP, uint16) {
+func serverAddress() net.IP {
 	address := net.ParseIP(os.Getenv("SERVER_ADDRESS"))
 	if address == nil {
 		address = net.IPv4(127, 0, 0, 1)
 	}
 
-	unstructured_port := os.Getenv("SERVER_PORT")
-	port, err := strconv.ParseUint(unstructured_port, 10, 16)
-	if err != nil {
-		port = 8080
-	}
-
-	return address, uint16(port)
+	return address
 }
 
 func useTLS() bool {
@@ -79,6 +93,12 @@ func accessMiddleware(next http.Handler) http.Handler {
 		log.Printf("%v %v\n", req.Method, req.URL.Path)
 		next.ServeHTTP(res, req)
 	})
+}
+
+func serveHTTPSRedirect(res http.ResponseWriter, req *http.Request) {
+	newLocation := fmt.Sprintf("https://crockeo.net%v", req.URL.Path)
+	res.Header().Add("Location", newLocation)
+	res.WriteHeader(301)
 }
 
 func serveHomepage(res http.ResponseWriter, req *http.Request) {
