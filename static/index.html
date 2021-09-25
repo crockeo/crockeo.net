@@ -2,92 +2,40 @@
 
 <html>
   <head>
-    <style>
-      body {
-	  color: #333333;
-	  font-family: sans-serif;
-	  padding: 1rem;
-	  margin: auto;
-      }
-
-      @media (min-aspect-ratio: 1/1) {
-	  body {
-	      width: 50vw;
-	  }
-      }
-
-      h1, h2, h3, h4 {
-	  padding: 0px;
-	  margin: 0px;
-      }
-
-      .link-header {
-      }
-
-      .links {
-	  display: grid;
-	  margin: 1rem;
-	  width: 0rem;
-
-	  grid-template-columns: repeat(2, 1fr);
-      }
-
-      .link-item {
-	  background: #555555;
-	  border-radius: 6rem;
-	  width: 6rem;
-	  height: 6rem;
-	  margin: 0.25rem;
-
-	  display: flex;
-	  align-items: center;
-	  justify-content: center;
-      }
-
-      a {
-	  color: #ffffff;
-      }
-
-      .qrcode {
-        width: 16rem;
-      }
-    </style>
-
+    <link rel="stylesheet" href="/static/index.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
 
   <body>
-    <h1>crockeo.net</h1>
-    <h4>home of the crockeo</h4>
+    <div class="top-bar">
+      <div class="top-bar-section">
+	<h1>crockeo.net</h1>
+	<h4>home of the crockeo</h4>
+      </div>
 
-    <p class="link-header">
-      There's no content for you here
-      because I just made this website for the QR code below.
-      Instead, have some links:
-    </p>
+      <div class="top-bar-section">
+	<a href="https://github.com/crockeo">
+	  <img class="link-icon" src="/static/images/GitHub-Mark-120px-plus.png" />
+	</a>
 
-    <div class="links">
-      <span class="link-item">
-	<a href="https://github.com/crockeo">GitHub</a>
-      </span>
+	<a href="https://linkedin.com/in/cerek-hillen/">
+	  <img class="link-icon" src="/static/images/LI-In-Bug.png" />
+	</a>
 
-      <span class="link-item">
-	<a href="https://twitter.crom/crockeo">Twitter</a>
-      </span>
-
-      <span class="link-item">
-	<a href="https://www.linkedin.com/in/cerek-hillen/">LinkedIn</a>
-      </span>
-
-      <span class="link-item">
-	<a href="/qr">Current QR</a>
-      </span>
+	<a href="https://twitter.com/crockeo">
+	  <img class="link-icon" src="/static/images/Twitter_Logo_Blue.png" />
+	</a>
+      </div>
     </div>
 
     <p class="link-header">
-      Or instead, feel free to copy this QR code.
+      There is no content here for you
+      because I made this website just for the QR code below.
+      Click it and find out where it goes!
     </p>
 
-    <img class="qrcode" src="/qr.png" />
+    <a href="/qr">
+      <img class="qrcode" src="/qr.png" />
+    </a>
   </body>
 </html>

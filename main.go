@@ -82,9 +82,10 @@ func (f funcHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 func makeServerHandler() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", serveHomepage)
+	mux.Handle("/static/", http.FileServer(http.Dir(".")))
 	mux.HandleFunc("/qr.png", serveQRCode)
 	mux.HandleFunc("/qr", serveRedirect)
+	mux.HandleFunc("/", serveHomepage)
 	return accessMiddleware(mux)
 }
 
@@ -101,16 +102,6 @@ func serveHTTPSRedirect(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(301)
 }
 
-func serveHomepage(res http.ResponseWriter, req *http.Request) {
-	file, err := os.Open("static/index.html")
-	if err != nil {
-	}
-
-	contents, err := ioutil.ReadAll(file)
-	res.WriteHeader(200)
-	res.Write(contents)
-}
-
 func serveQRCode(res http.ResponseWriter, req *http.Request) {
 	png, err := qrcode.Encode("https://crockeo.net/qr", qrcode.Medium, 1024)
 	if err != nil {
@@ -124,4 +115,19 @@ func serveQRCode(res http.ResponseWriter, req *http.Request) {
 func serveRedirect(res http.ResponseWriter, req *http.Request) {
 	res.Header().Add("Location", "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 	res.WriteHeader(307)
+}
+
+func serveHomepage(res http.ResponseWriter, req *http.Request) {
+	if req.URL.Path != "/" {
+		http.NotFound(res, req)
+		return
+	}
+
+	file, err := os.Open("static/index.html")
+	if err != nil {
+	}
+
+	contents, err := ioutil.ReadAll(file)
+	res.WriteHeader(200)
+	res.Write(contents)
 }
