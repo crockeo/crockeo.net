@@ -123,11 +123,36 @@ func serveHomepage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	file, err := os.Open("static/index.html")
+	index, err := readFile("static/index.html")
+	if err != nil {
+	}
+	contents, err := interpolateBody(index)
 	if err != nil {
 	}
 
-	contents, err := ioutil.ReadAll(file)
 	res.WriteHeader(200)
 	res.Write(contents)
+}
+
+func interpolateBody(body []byte) ([]byte, error) {
+	header, err := readFile("static/header.html")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	footer, err := readFile("static/footer.html")
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return append(header, append(body, footer...)...), nil
+}
+
+func readFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return []byte{}, err
+	}
+	defer file.Close()
+	return ioutil.ReadAll(file)
 }
