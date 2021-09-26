@@ -86,7 +86,10 @@ func makeServerHandler() http.Handler {
 	mux.HandleFunc("/qr.png", serveQRCode)
 	mux.HandleFunc("/qr", serveRedirect)
 	mux.HandleFunc("/", serveHomepage)
-	return accessMiddleware(mux)
+
+	var handler http.Handler = mux
+	handler = accessMiddleware(handler)
+	return handler
 }
 
 func accessMiddleware(next http.Handler) http.Handler {
@@ -125,12 +128,16 @@ func serveHomepage(res http.ResponseWriter, req *http.Request) {
 
 	index, err := readFile("static/index.html")
 	if err != nil {
+		res.WriteHeader(500)
+		res.Write([]byte(err.Error()))
+		return
 	}
 	contents, err := interpolateBody(index)
 	if err != nil {
+		res.WriteHeader(500)
+		res.Write([]byte(err.Error()))
+		return
 	}
-
-	res.WriteHeader(200)
 	res.Write(contents)
 }
 
